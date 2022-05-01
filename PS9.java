@@ -105,9 +105,7 @@ public class PS9 {
             }
 
             if(current.pathLength > newWeight && current.feasibleFlow > 0 && !visited[current.dest]){
-                if(cap > current.feasibleFlow){
-                    cap = current.feasibleFlow; // sets the maximum possible flow that can travel on this path
-                }
+
                 current.pathLength = newWeight;
 
                 if(current.dest == sink){ // if current is the sink we can break out of the loop
@@ -152,19 +150,21 @@ public class PS9 {
         finalShortestPath.add(pathVertex.dest);
 
         while(pathVertex != null){
+            if(cap > pathVertex.feasibleFlow){
+                cap = pathVertex.feasibleFlow; // sets the maximum possible flow that can travel on this path
+            }
             finalShortestPath.add(pathVertex.start);
             pathVertex = pathVertex.prevParent;
         }
 
         Collections.reverse(finalShortestPath);
         for(int i = 0; i < finalShortestPath.size()-1; i++){
-            for(int j = 1; j < finalShortestPath.size(); j++){
                 //add the capped flow to the graph switching both i,j and j,i in the resid graph
                 int x = finalShortestPath.get(i);
-                int y = finalShortestPath.get(j);
+                int y = finalShortestPath.get(i+1);
                 residualGraph[x][y].setFlow(cap); //TODO: I think this works now
                 residualGraph[y][x].setFlow(-cap);
-            }
+
         }
 
         flowGained.add(cap); // for line 1 of results
