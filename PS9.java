@@ -64,14 +64,18 @@ public class PS9 {
         }
         System.out.println(flowGained.get(flowGained.size()-1));
         System.out.println(maxFlow);
-//        //A single integer indicating the number of saturated edges in the s-t maximum flow.
-//        System.out.println(saturatedEdges);
-//        //A sorted (increasing) sequence of integers indicating the indices of the vertices in S in the s-t cut.
-//        System.out.println(setS);
-//        //A single integer indicating the total flow across the edges from S to T.  (Note that S and T are sets of vertices in the min-cut.)
-//        System.out.println(flowStoT);
-//        //A single integer indicating the total capacity across the edges from T to S.
-//        System.out.println(capTtoS);
+        //A single integer indicating the number of saturated edges in the s-t maximum flow.
+        System.out.println(saturatedEdges);
+        //A sorted (increasing) sequence of integers indicating the indices of the vertices in S in the s-t cut.
+        for(int i = 0; i < setS.size()-1; i++){
+            System.out.print(setS.get(i) + " ");
+        }
+        System.out.println(setS.get(setS.size()-1));
+
+        //A single integer indicating the total flow across the edges from S to T.  (Note that S and T are sets of vertices in the min-cut.)
+        System.out.println(maxFlow);
+        //A single integer indicating the total capacity across the edges from T to S.
+        System.out.println(capTtoS);
     }
 
     /**
@@ -90,6 +94,7 @@ public class PS9 {
         PriorityQueue<Vertex> pq = new PriorityQueue<>();
         for(int i = 0; i < numOfVerts; i++){
             Vertex start = residualGraph[source][i];
+            start.pathLength = 1;
             start.prevParent = null; // set parent to null, this is our root
             pq.add(start);
         }
@@ -99,14 +104,9 @@ public class PS9 {
         while(!pq.isEmpty()){
             Vertex current = pq.poll();
 
-            int newWeight = 1; // initialize path length from source for root vertex with no parent
-            if(current.prevParent != null){ // safety clause
-                newWeight = current.prevParent.pathLength + 1;
-            }
 
-            if(current.pathLength > newWeight && current.feasibleFlow > 0 && !visited[current.dest]){
+            if(current.feasibleFlow > 0 && !visited[current.dest]){
 
-                current.pathLength = newWeight;
 
                 if(current.dest == sink){ // if current is the sink we can break out of the loop
                     pathVertex = current;
@@ -118,6 +118,7 @@ public class PS9 {
                     for(int i = 0; i < numOfVerts; i++){
                         Vertex next = residualGraph[current.dest][i];
                         next.prevParent = current;
+                        next.pathLength = current.pathLength + 1;
                         pq.add(next);
                     }
 
@@ -131,10 +132,24 @@ public class PS9 {
                 if(visited[i]){
                     setS.add(i);
                     for(int j = 0; j < numOfVerts; j++){
-                        if(residualGraph[i][j].feasibleFlow == 0 && residualGraph[i][j].capacity > 0){ // this is a saturated edge
+                        if(residualGraph[i][j].feasibleFlow == 0 && residualGraph[i][j].capacity > 0 ){ // this is a saturated edge
+                            if(capacities[i][j] > 0) {
+                                flowStoT += capacities[i][j]; // total flow across s to t
+                            }
+                        }
+
+                        if(!visited[j] && residualGraph[i][j].flow > 0) {
                             saturatedEdges++;
-                            flowStoT += residualGraph[i][j].flow;  // total flow across s to t
-                            capTtoS += residualGraph[j][i].capacity;
+                        }
+                    }
+                }
+                else {
+                    for (int j = 0; j < numOfVerts; j++) {
+                        if(visited[j]) {
+                            capTtoS += capacities[i][j];
+                            if(residualGraph[i][j].flow > 0){
+                                saturatedEdges++;
+                            }
                         }
                     }
                 }
